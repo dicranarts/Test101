@@ -289,7 +289,7 @@
         /* ==========================================
            1. CONFIGURATION & STATE MANAGEMENT
            ========================================== */
-        const GOOGLE_SHEET_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbx_PLACEHOLDER_REPLACE_WITH_YOUR_APPS_SCRIPT_URL/exec';
+        const GOOGLE_SHEET_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbyb9ThArQ81saYbFJELiUAC-tZdI2WYXq0hBqzYFIaqVJpCa_SYq1iiaomuKwZd6evuoQ/exec';
         
         let currentTargetHour = 12; // 0 to 24 in float
         let citySearchTimeout = null;
@@ -680,7 +680,7 @@
                 await fetch(GOOGLE_SHEET_WEBHOOK_URL, {
                     method: 'POST',
                     mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify(formData)
                 });
 
