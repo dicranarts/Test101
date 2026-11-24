@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test101 - Ordena tus Matches</title>
+
+  <!-- Fonts & Tailwind CSS -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Gochi+Hand&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            'title': ['"Gochi Hand"', 'cursive'],
+            'body': ['"Roboto"', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    .glass-card {
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    .option-card {
+      touch-action: none;
+      cursor: grab;
+    }
+    .option-card:active {
+      cursor: grabbing;
+    }
+  </style>
+</head>
+<body class="font-body bg-slate-950 text-slate-100 min-h-full flex flex-col justify-between relative p-4">
+
+  <!-- Header -->
+  <header class="pt-6 pb-2 text-center">
+    <h1 class="font-title text-5xl md:text-6xl text-amber-300 drop-shadow-md">
+      ✦ Test101
+    </h1>
+    <p class="mt-1 text-sm text-slate-300">
+      Verifiquemos la teoría: ordena tus matches de mayor a menor afinidad.
+    </p>
+  </header>
+
+  <!-- Contenedor principal -->
+  <main class="max-w-md w-full mx-auto my-auto py-4">
+    <div class="glass-card rounded-3xl p-6 shadow-2xl space-y-4">
+      
+      <p class="text-xs text-slate-400 text-center mb-2">
+        Usa las flechas <i data-lucide="arrow-up" class="inline w-3 h-3"></i> <i data-lucide="arrow-down" class="inline w-3 h-3"></i> para organizar cuál sientes que es tu <strong>1.º, 2.º y 3.er puesto</strong>.
+      </p>
+
+      <!-- Lista dinámica de Matches -->
+      <div id="match-list" class="space-y-3">
+        <!-- Se genera dinámicamente con JS -->
+      </div>
+
+      <!-- Botón de Envío -->
+      <button 
+        id="btn-enviar" 
+        onclick="enviarOrden()" 
+        class="w-full py-3.5 px-6 rounded-xl font-medium text-white bg-purple-600 hover:bg-purple-700 active:scale-[0.99] transition duration-200 flex items-center justify-center gap-2 shadow-lg shadow-purple-900/40 mt-6 cursor-pointer"
+      >
+        <i data-lucide="send" class="w-4 h-4"></i>
+        <span>Confirmar mi orden</span>
+      </button>
+
+      <!-- Mensaje de confirmación final (oculto por defecto) -->
+      <div id="mensaje-exito" class="hidden text-center py-4 space-y-2">
+        <div class="text-emerald-400 text-lg font-bold">¡Orden enviado exitosamente!</div>
+        <p class="text-xs text-slate-300">Gracias por ayudarnos a verificar la teoría. Ya registramos tus respuestas.</p>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="py-3 text-center text-xs text-slate-500">
+    Test101 &bull; Afinidad & AI Matching
+  </footer>
+
+  <script>
+    // 1. URL de tu Webhook de Make.com (reemplázala en el Paso 3)
+    const MAKE_WEBHOOK_URL = 'PEGA_AQUI_TU_WEBHOOK_URL_DE_MAKE';
+
+    // 2. Extraer parámetros de la URL enviados desde el correo
+    const urlParams = new URLSearchParams(window.location.search);
+    const idUsuario = urlParams.get('usuario') || urlParams.get('u') || 'Anónimo';
+    
+    // Lista de opciones por defecto o desde parámetros
+    let matches = [
+      { id: '1', nombre: urlParams.get('m1') || 'Opción A' },
+      { id: '2', nombre: urlParams.get('m2') || 'Opción B' },
+      { id: '3', nombre: urlParams.get('m3') || 'Opción C' }
+    ];
+
+    function renderList() {
+      const listContainer = document.getElementById('match-list');
+      listContainer.innerHTML = '';
+
+      matches.forEach((item, index) => {
+        const card = document.createElement('div');
+        card.className = 'option-card bg-slate-900/90 border border-slate-700/80 rounded-2xl p-4 flex items-center justify-between gap-3 transition-all duration-200';
+        
+        let badgeColor = 'bg-amber-400 text-slate-950';
+        if (index === 1) badgeColor = 'bg-purple-500 text-white';
+        if (index === 2) badgeColor = 'bg-slate-700 text-slate-300';
+
+        card.innerHTML = `
+          <div class="flex items-center gap-3">
+            <span class="${badgeColor} w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs shrink-0">
+              ${index + 1}º
+            </span>
+            <span class="font-medium text-slate-100 text-sm">${item.nombre}</span>
+          </div>
+
+          <div class="flex items-center gap-1">
+            ${index > 0 ? `<button onclick="mover(${index}, -1)" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300"><i data-lucide="chevron-up" class="w-4 h-4"></i></button>` : '<div class="w-7"></div>'}
+            ${index < matches.length - 1 ? `<button onclick="mover(${index}, 1)" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300"><i data-lucide="chevron-down" class="w-4 h-4"></i></button>` : '<div class="w-7"></div>'}
+          </div>
+        `;
+        listContainer.appendChild(card);
+      });
+
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+    function mover(index, direccion) {
+      const nuevoIndex = index + direccion;
+      if (nuevoIndex < 0 || nuevoIndex >= matches.length) return;
+      
+      const temp = matches[index];
+      matches[index] = matches[nuevoIndex];
+      matches[nuevoIndex] = temp;
+      
+      renderList();
+    }
+
+    async function enviarOrden() {
+      const btn = document.getElementById('btn-enviar');
+      btn.disabled = true;
+      btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Guardando...`;
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+
+      const payload = {
+        usuario: idUsuario,
+        puesto_1: matches[0].nombre,
+        puesto_2: matches[1].nombre,
+        puesto_3: matches[2].nombre,
+        timestamp: new Date().toISOString()
+      };
+
+      try {
+        await fetch(MAKE_WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (typeof confetti === 'function') confetti({ particleCount: 100, spread: 60, origin: { y: 0.6 } });
+
+        btn.classList.add('hidden');
+        document.getElementById('match-list').classList.add('hidden');
+        document.getElementById('mensaje-exito').classList.remove('hidden');
+
+      } catch (err) {
+        console.error('Error enviando orden:', err);
+        alert('Hubo un detalle de conexión. Por favor intenta de nuevo.');
+        btn.disabled = false;
+        btn.innerHTML = `Confirmar mi orden`;
+      }
+    }
+
+    window.onload = function() {
+      renderList();
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    };
+  </script>
+</body>
+</html>
